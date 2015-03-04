@@ -9,7 +9,7 @@ Running
 Clone this repo & install dependencies
 
 ```
-git clone git@github.com:morganherlocker/chicago-crime.git
+git clone https://github.com/morganherlocker/chicago-crime.git
 cd chicago-crime
 npm install
 ```
