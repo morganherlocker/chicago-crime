@@ -6,12 +6,15 @@ var rs = fs.createReadStream('./crimes.json');
 var js = JSONStream.parse('.data.*');
 pace = require('pace')(5738523);
 
+// pipe data from the crimes.json file so memory usage is kept low
 rs.pipe(js);
 
+// create 1/2 mi grid over chicago
 var bbox = [ -87.934324986, 41.644580105, -87.524388789, 42.023024908 ];
 var grid = turf.squareGrid(bbox, 0.5, 'miles');
 fs.writeFileSync('grid.geojson', JSON.stringify(grid));
 grid.features.forEach(function(cell) {
+    // precompute bboxes
     cell.bbox = turf.extent(cell);
     cell.properties.total = 0;
 });
@@ -19,6 +22,7 @@ grid.features.forEach(function(cell) {
 var months = {};
 js.on('data', function (obj) {
     pace.op();
+    // check for valid lat, lons
     if(obj[28] && obj[27]) {
         var pt = turf.point([parseFloat(obj[28]), parseFloat(obj[27])]);
         for(var i = 0; i < grid.features.length; i++) {
@@ -41,9 +45,11 @@ js.on('data', function (obj) {
 
 js.on('end', function() {
     months = Object.keys(months);
+    // remove cells with no crimes across all months
     grid.features = grid.features.filter(function(cell) {
         if(cell.properties.total > 0) return true;
     });
+    // populate undefined months with a 0 value
     grid.features.forEach(function(cell) {
         delete cell.bbox;
         months.forEach(function(month) {
